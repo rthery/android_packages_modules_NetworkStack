@@ -276,6 +276,16 @@ public class TcpSocketTrackerTest {
         assertFalse(TcpSocketTracker.enoughBytesRemainForValidNlMsg(buffer));
     }
 
+    @Test
+    public void testKernelHasTcpInfoSegs() {
+        assertFalse(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("3.10.108-hiru+"));
+        assertFalse(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("4.1.52"));
+        assertTrue(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("4.2.0"));
+        assertTrue(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("4.14.180-g1a2b3c"));
+        assertTrue(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("5.10.66-android12-9"));
+        assertTrue(TcpSocketTracker.Dependencies.kernelHasTcpInfoSegs("unknown"));
+    }
+
     @Test @IgnoreUpTo(Build.VERSION_CODES.Q) // TCP info parsing is not supported on Q
     public void testPollSocketsInfo() throws Exception {
         // This test requires shims that provide API 30 access

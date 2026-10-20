@@ -79,6 +79,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class for NetworkStack to send a SockDiag request and parse the returned tcp info.
@@ -586,7 +588,21 @@ public class TcpSocketTracker {
         public boolean isTcpInfoParsingSupported() {
             // Request tcp info from NetworkStack directly needs extra SELinux permission added
             // after Q release.
-            return ShimUtils.isReleaseOrDevelopmentApiAbove(Build.VERSION_CODES.Q);
+            return ShimUtils.isReleaseOrDevelopmentApiAbove(Build.VERSION_CODES.Q)
+                    && kernelHasTcpInfoSegs(Os.uname().release);
+        }
+
+        /**
+         * Return whether a kernel release reports tcpi_segs_in and tcpi_segs_out in tcp_info.
+         * They were added in Linux 4.2; older kernels send a tcp_info too short for TcpInfo.
+         */
+        @VisibleForTesting
+        static boolean kernelHasTcpInfoSegs(@NonNull final String release) {
+            final Matcher m = Pattern.compile("^(\\d+)\\.(\\d+)").matcher(release);
+            if (!m.find()) return true;
+            final int major = Integer.parseInt(m.group(1));
+            final int minor = Integer.parseInt(m.group(2));
+            return major > 4 || (major == 4 && minor >= 2);
         }
 
         /**
